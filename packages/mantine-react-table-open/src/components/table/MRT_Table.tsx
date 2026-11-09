@@ -216,7 +216,11 @@ export const MRT_Table = <TData extends MRT_RowData>({
         <div
           className={classes['band-head-clip']}
           ref={headClipRef}
-          style={{ paddingRight: bandScrollbar }}
+          style={
+            bandScrollbar > 0
+              ? { width: `calc(100% - ${bandScrollbar}px)` }
+              : undefined
+          }
         >
           <Table
             {...tableProps}

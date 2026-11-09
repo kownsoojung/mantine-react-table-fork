@@ -11,6 +11,7 @@ type Contact = {
   meeting: string;
   memo: string;
   name: string;
+  note: string;
   visitDate: string;
   visitTime: string;
 };
@@ -32,6 +33,7 @@ const data: Contact[] = Array.from({ length: 10 }, (_, index) => {
     meeting: `2026-11-${day} ${hour}:${minute}`,
     memo: `${city} ${index + 1}`,
     name: `회원${index + 1}`,
+    note: '',
     visitDate: `2026-11-${day}`,
     visitTime: `${hour}:${minute}`,
   };
@@ -89,17 +91,18 @@ const Example = () => {
       enableTopToolbar={false}
       headFormat={{
         cells: [
-          { col: 0, row: 0, rowspan: 2, text: '이름' },
+          { col: 0, row: 0, rowspan: 3, text: '이름' },
           { col: 1, row: 0, text: '지역' },
           { col: 2, row: 0, text: '회원' },
           { col: 3, row: 0, text: '방문일' },
           { col: 4, row: 0, text: '시간' },
           { col: 5, row: 0, text: '금액' },
-          { col: 6, row: 0, rowspan: 2, text: '등급' },
+          { col: 6, row: 0, rowspan: 3, text: '등급' },
           { col: 1, colspan: 3, row: 1, text: '메모' },
           { col: 4, colspan: 2, row: 1, text: '일시' },
+          { col: 1, colspan: 5, row: 2, text: '비고' },
         ],
-        rows: 2,
+        rows: 3,
       }}
       bodyFormat={{
         cells: [
@@ -111,7 +114,7 @@ const Example = () => {
             editVariant: 'text',
             maxLength: 10,
             row: 0,
-            rowspan: 2,
+            rowspan: 3,
           },
           {
             accessorKey: 'city',
@@ -149,7 +152,7 @@ const Example = () => {
             editOptions: ['일반', '우수', 'VIP'],
             editVariant: 'radio',
             row: 0,
-            rowspan: 2,
+            rowspan: 3,
           },
           {
             accessorKey: 'memo',
@@ -168,8 +171,16 @@ const Example = () => {
             editVariant: 'datetime',
             row: 1,
           },
+          {
+            accessorKey: 'note',
+            col: 1,
+            colspan: 5,
+            editVariant: 'text',
+            row: 2,
+            textProps: { placeholder: '비고' },
+          },
         ],
-        rows: 2,
+        rows: 3,
       }}
       mantinePaperProps={{
         style: {

@@ -4,6 +4,7 @@
 
 .root-band {
   border-collapse: separate !important;
+  border-right-width: 0 !important;
   border-spacing: 0;
   max-width: calc(var(--mrt-band-table-width) * 1px) !important;
   min-width: calc(var(--mrt-band-table-width) * 1px) !important;
@@ -19,13 +20,9 @@
 .root-band :global(td) {
   border-bottom: calc(0.0625rem * var(--mantine-scale, 1)) solid
     var(--table-border-color) !important;
-  border-inline-start: 0 !important;
-}
-
-.root-band :global(th:not(:last-child)),
-.root-band :global(td:not(:last-child)) {
   border-inline-end: calc(0.0625rem * var(--mantine-scale, 1)) solid
     var(--table-border-color) !important;
+  border-inline-start: 0 !important;
 }
 
 .root-band :global(tbody > tr:last-child > td) {
