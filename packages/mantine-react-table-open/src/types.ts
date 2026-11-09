@@ -54,9 +54,11 @@ import {
   type LoadingOverlayProps,
   type ModalProps,
   type MultiSelectProps,
+  type NumberInputProps,
   type PaginationProps,
   type PaperProps,
   type ProgressProps,
+  type RadioGroupProps,
   type RadioProps,
   type RangeSliderProps,
   type SelectProps,
@@ -69,10 +71,15 @@ import {
   type TableTheadProps,
   type TableThProps,
   type TableTrProps,
+  type TextareaProps,
   type TextInputProps,
   type UnstyledButtonProps,
 } from '@mantine/core';
-import { type DateInputProps } from '@mantine/dates';
+import {
+  type DateInputProps,
+  type DateTimePickerProps,
+  type TimePickerProps,
+} from '@mantine/dates';
 
 import { type MRT_AggregationFns } from './fns/aggregationFns';
 import { type MRT_FilterFns } from './fns/filterFns';
@@ -766,15 +773,42 @@ export type MRT_BandEditVariant =
   | 'textarea'
   | 'time';
 
+export type MRT_BandValidation<TData extends MRT_RowData> = {
+  max?: number;
+  maxLength?: number;
+  message?: string;
+  min?: number;
+  minLength?: number;
+  pattern?: string;
+  required?: boolean | string;
+  validate?: (
+    value: unknown,
+    record: TData,
+  ) => boolean | string | null | undefined;
+};
+
 export type MRT_BandCell<TData extends MRT_RowData> = {
   accessorKey?: DeepKeys<TData> | string;
   col: number;
   colspan?: number;
-  /** dayjs format for `date` and `datetime`, for example `YYYY.MM.DD`. */
+  /** Format for `date`, `datetime`, and `time`. Time defaults to `HH:mm`, for example `23:23`. Use `HH:mm:ss` or `hh:mm A` to change it. */
   editFormat?: string;
   /** Choices for `select`, `multi-select`, and `radio`. */
   editOptions?: string[];
+  editValidation?: MRT_BandValidation<TData>;
+  checkboxProps?: CheckboxProps;
+  dateProps?: DateInputProps;
+  datetimeProps?: DateTimePickerProps;
+  multiSelectProps?: MultiSelectProps;
+  numberProps?: NumberInputProps;
+  radioProps?: RadioGroupProps;
+  selectProps?: SelectProps;
+  textProps?: TextInputProps;
+  textareaProps?: TextareaProps;
+  timeProps?: TimePickerProps;
   editVariant?: MRT_BandEditVariant;
+  /** Character limit for text, textarea, and number editors. */
+  maxLength?: number;
   row: number;
   rowspan?: number;
   text?: string;

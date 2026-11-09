@@ -148,10 +148,13 @@ export const MRT_TableHead = <TData extends MRT_RowData>({
           ? classes['root-grid']
           : classes['root-table-row-group'],
         stickyHeader && classes['root-sticky'],
+        stickyHeader && headFormat && classes['root-band-sticky'],
         tableHeadProps?.className,
       )}
       pos={
-        stickyHeader && layoutMode?.startsWith('grid') ? 'sticky' : 'relative'
+        stickyHeader && (layoutMode?.startsWith('grid') || headFormat)
+          ? 'sticky'
+          : 'relative'
       }
       ref={(ref: HTMLTableSectionElement) => {
         tableHeadRef.current = ref;

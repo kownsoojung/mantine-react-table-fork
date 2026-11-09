@@ -30,6 +30,10 @@
   z-index: 3;
 }
 
+.root-band-sticky {
+  opacity: 1;
+}
+
 .banner-tr {
   display: table-row;
 }

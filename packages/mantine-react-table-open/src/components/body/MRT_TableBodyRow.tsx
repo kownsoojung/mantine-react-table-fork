@@ -26,7 +26,7 @@ import {
   Textarea,
   TextInput,
 } from '@mantine/core';
-import { DateInput, DateTimePicker, TimeInput } from '@mantine/dates';
+import { DateInput, DateTimePicker, TimePicker } from '@mantine/dates';
 
 import cellClasses from './MRT_TableBodyCell.module.css';
 
@@ -36,6 +36,7 @@ import { MRT_TableDetailPanel } from './MRT_TableDetailPanel';
 import {
   type MRT_BandCell,
   type MRT_BandEditVariant,
+  type MRT_BandValidation,
   type MRT_Cell,
   type MRT_ColumnVirtualizer,
   type MRT_DensityState,
@@ -47,6 +48,7 @@ import {
 } from '../../types';
 import {
   bandLockedColumnSize,
+  getBandValidationError,
   getRecordValue,
   groupBandCells,
   splitLeafColumns,
@@ -75,32 +77,71 @@ const writeBandValue = <TData extends MRT_RowData>(
 
 const MRT_BandEditControl = <TData extends MRT_RowData>({
   accessorKey,
+  checkboxProps,
+  dateProps,
+  datetimeProps,
   editFormat,
   editOptions = [],
+  editValidation,
   editVariant = 'text',
   initialValue,
+  maxLength,
+  multiSelectProps,
+  numberProps,
+  radioProps,
   row,
+  selectProps,
+  textProps,
+  textareaProps,
+  timeProps,
 }: {
   accessorKey: string;
+  checkboxProps?: MRT_BandCell<TData>['checkboxProps'];
+  dateProps?: MRT_BandCell<TData>['dateProps'];
+  datetimeProps?: MRT_BandCell<TData>['datetimeProps'];
   editFormat?: string;
   editOptions?: string[];
+  editValidation?: MRT_BandValidation<TData>;
   editVariant?: MRT_BandEditVariant;
   initialValue: unknown;
+  maxLength?: number;
+  multiSelectProps?: MRT_BandCell<TData>['multiSelectProps'];
+  numberProps?: MRT_BandCell<TData>['numberProps'];
+  radioProps?: MRT_BandCell<TData>['radioProps'];
   row: MRT_Row<TData>;
+  selectProps?: MRT_BandCell<TData>['selectProps'];
+  textProps?: MRT_BandCell<TData>['textProps'];
+  textareaProps?: MRT_BandCell<TData>['textareaProps'];
+  timeProps?: MRT_BandCell<TData>['timeProps'];
 }) => {
+  const lengthLimit = (limit?: number) =>
+    maxLength ?? editValidation?.maxLength ?? limit;
+  const stopClick =
+    (onClick?: (event: any) => void) =>
+    (event: ReactMouseEvent<HTMLElement>) => {
+      event.stopPropagation();
+      onClick?.(event);
+    };
   const [value, setValue] = useState(initialValue);
+  const [error, setError] = useState(() =>
+    getBandValidationError(editValidation, initialValue, row.original),
+  );
+
+  const commit = (next: unknown) => {
+    setValue(next);
+    writeBandValue(row, accessorKey, next);
+    setError(getBandValidationError(editValidation, next, row.original));
+  };
 
   if (editVariant === 'checkbox') {
     const checked = value === true || value === 'true';
     return (
       <Checkbox
+        {...checkboxProps}
         checked={checked}
-        onChange={(event) => {
-          const next = event.currentTarget.checked;
-          setValue(next);
-          writeBandValue(row, accessorKey, next);
-        }}
-        onClick={(event) => event.stopPropagation()}
+        error={error || checkboxProps?.error}
+        onChange={(event) => commit(event.currentTarget.checked)}
+        onClick={stopClick(checkboxProps?.onClick)}
       />
     );
   }
@@ -108,12 +149,11 @@ const MRT_BandEditControl = <TData extends MRT_RowData>({
   if (editVariant === 'radio') {
     return (
       <Radio.Group
+        {...radioProps}
+        error={error || radioProps?.error}
         name={`${accessorKey}-${row.id}`}
-        onChange={(next) => {
-          setValue(next);
-          writeBandValue(row, accessorKey, next);
-        }}
-        onClick={(event) => event.stopPropagation()}
+        onChange={commit}
+        onClick={stopClick(radioProps?.onClick)}
         value={value == null ? '' : String(value)}
       >
         <Group gap="sm" wrap="wrap">
@@ -128,12 +168,11 @@ const MRT_BandEditControl = <TData extends MRT_RowData>({
   if (editVariant === 'select') {
     return (
       <Select
-        data={editOptions}
-        onChange={(next) => {
-          setValue(next);
-          writeBandValue(row, accessorKey, next);
-        }}
-        onClick={(event) => event.stopPropagation()}
+        {...selectProps}
+        data={editOptions.length ? editOptions : selectProps?.data}
+        error={error || selectProps?.error}
+        onChange={commit}
+        onClick={stopClick(selectProps?.onClick)}
         value={value == null ? null : String(value)}
       />
     );
@@ -143,12 +182,11 @@ const MRT_BandEditControl = <TData extends MRT_RowData>({
     const selected = Array.isArray(value) ? value.map(String) : [];
     return (
       <MultiSelect
-        data={editOptions}
-        onChange={(next) => {
-          setValue(next);
-          writeBandValue(row, accessorKey, next);
-        }}
-        onClick={(event) => event.stopPropagation()}
+        {...multiSelectProps}
+        data={editOptions.length ? editOptions : multiSelectProps?.data}
+        error={error || multiSelectProps?.error}
+        onChange={commit}
+        onClick={stopClick(multiSelectProps?.onClick)}
         value={selected}
       />
     );
@@ -159,12 +197,11 @@ const MRT_BandEditControl = <TData extends MRT_RowData>({
       <Textarea
         autosize
         minRows={2}
-        onChange={(event) => {
-          const next = event.currentTarget.value;
-          setValue(next);
-          writeBandValue(row, accessorKey, next);
-        }}
-        onClick={(event) => event.stopPropagation()}
+        {...textareaProps}
+        error={error || textareaProps?.error}
+        maxLength={lengthLimit(textareaProps?.maxLength)}
+        onChange={(event) => commit(event.currentTarget.value)}
+        onClick={stopClick(textareaProps?.onClick)}
         value={value == null ? '' : String(value)}
       />
     );
@@ -175,11 +212,11 @@ const MRT_BandEditControl = <TData extends MRT_RowData>({
       typeof value === 'number' || typeof value === 'string' ? value : '';
     return (
       <NumberInput
-        onChange={(next) => {
-          setValue(next);
-          writeBandValue(row, accessorKey, next);
-        }}
-        onClick={(event) => event.stopPropagation()}
+        {...numberProps}
+        error={error || numberProps?.error}
+        maxLength={lengthLimit(numberProps?.maxLength)}
+        onChange={commit}
+        onClick={stopClick(numberProps?.onClick)}
         value={numberValue}
       />
     );
@@ -188,28 +225,30 @@ const MRT_BandEditControl = <TData extends MRT_RowData>({
   if (editVariant === 'date') {
     return (
       <DateInput
-        onChange={(next) => {
-          setValue(next);
-          writeBandValue(row, accessorKey, next);
-        }}
-        onClick={(event) => event.stopPropagation()}
+        {...dateProps}
+        error={error || dateProps?.error}
+        onChange={commit}
+        onClick={stopClick(dateProps?.onClick)}
         value={value == null || value === '' ? null : String(value)}
-        valueFormat={editFormat || 'YYYY-MM-DD'}
-        withTime={Boolean(editFormat && /[Hhms]/.test(editFormat))}
+        valueFormat={dateProps?.valueFormat ?? (editFormat || 'YYYY-MM-DD')}
+        withTime={
+          dateProps?.withTime ?? Boolean(editFormat && /[Hhms]/.test(editFormat))
+        }
       />
     );
   }
 
   if (editVariant === 'time') {
+    const timeFormat = editFormat || 'HH:mm';
     return (
-      <TimeInput
-        onChange={(event) => {
-          const next = event.currentTarget.value;
-          setValue(next);
-          writeBandValue(row, accessorKey, next);
-        }}
-        onClick={(event) => event.stopPropagation()}
+      <TimePicker
+        {...timeProps}
+        error={error || timeProps?.error}
+        format={timeProps?.format ?? (/[aA]/.test(timeFormat) ? '12h' : '24h')}
+        onChange={commit}
+        onClick={stopClick(timeProps?.onClick)}
         value={value == null ? '' : String(value)}
+        withSeconds={timeProps?.withSeconds ?? /s/.test(timeFormat)}
       />
     );
   }
@@ -217,27 +256,27 @@ const MRT_BandEditControl = <TData extends MRT_RowData>({
   if (editVariant === 'datetime') {
     return (
       <DateTimePicker
-        onChange={(next) => {
-          setValue(next);
-          writeBandValue(row, accessorKey, next);
-        }}
-        onClick={(event) => event.stopPropagation()}
+        {...datetimeProps}
+        error={error || datetimeProps?.error}
+        onChange={commit}
+        onClick={stopClick(datetimeProps?.onClick)}
         value={value == null || value === '' ? null : String(value)}
-        valueFormat={editFormat || 'YYYY-MM-DD HH:mm'}
+        valueFormat={
+          datetimeProps?.valueFormat ?? (editFormat || 'YYYY-MM-DD HH:mm')
+        }
       />
     );
   }
 
   return (
     <TextInput
-      onChange={(event) => {
-        const next = event.currentTarget.value;
-        setValue(next);
-        writeBandValue(row, accessorKey, next);
-      }}
-      onClick={(event) => event.stopPropagation()}
-      value={value == null ? '' : String(value)}
       variant="default"
+      {...textProps}
+      error={error || textProps?.error}
+      maxLength={lengthLimit(textProps?.maxLength)}
+      onChange={(event) => commit(event.currentTarget.value)}
+      onClick={stopClick(textProps?.onClick)}
+      value={value == null ? '' : String(value)}
     />
   );
 };
@@ -461,10 +500,22 @@ export const MRT_TableBodyRow = <TData extends MRT_RowData>({
         {showInput && accessorKey ? (
           <MRT_BandEditControl
             accessorKey={accessorKey}
+            checkboxProps={cell.checkboxProps}
+            dateProps={cell.dateProps}
+            datetimeProps={cell.datetimeProps}
             editFormat={cell.editFormat}
             editOptions={cell.editOptions}
+            editValidation={cell.editValidation}
+            multiSelectProps={cell.multiSelectProps}
+            numberProps={cell.numberProps}
+            radioProps={cell.radioProps}
+            selectProps={cell.selectProps}
+            textProps={cell.textProps}
+            textareaProps={cell.textareaProps}
+            timeProps={cell.timeProps}
             editVariant={editVariant}
             initialValue={raw}
+            maxLength={cell.maxLength}
             row={row}
           />
         ) : raw == null ? (
