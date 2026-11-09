@@ -15,85 +15,27 @@ type Contact = {
   visitTime: string;
 };
 
-const data: Contact[] = [
-  {
-    active: true,
-    amount: 12000,
-    city: '서울',
-    grade: '우수',
-    meeting: '2026-11-09 14:00',
-    memo: '서울시 중구 세종대로 110',
-    name: '김민수',
-    visitDate: '2026-11-09',
-    visitTime: '09:30',
-  },
-  {
-    active: false,
-    amount: 8000,
-    city: '부산',
-    grade: '일반',
-    meeting: '2026-11-10 11:15',
-    memo: '부산시 해운대구 우동 123',
-    name: '이서연',
-    visitDate: '2026-11-10',
-    visitTime: '13:00',
-  },
-  {
-    active: true,
-    amount: 15000,
-    city: '대구',
-    grade: 'VIP',
-    meeting: '2026-11-11 16:45',
-    memo: '대구시 중구 동성로 45',
-    name: '박지훈',
-    visitDate: '2026-11-11',
-    visitTime: '10:20',
-  },
-  {
-    active: true,
-    amount: 15000,
-    city: '대구',
-    grade: 'VIP',
-    meeting: '2026-11-11 16:45',
-    memo: '대구시 중구 동성로 45',
-    name: '박지훈',
-    visitDate: '2026-11-11',
-    visitTime: '10:20',
-  },
-  {
-    active: true,
-    amount: 15000,
-    city: '대구',
-    grade: 'VIP',
-    meeting: '2026-11-11 16:45',
-    memo: '대구시 중구 동성로 45',
-    name: '박지훈',
-    visitDate: '2026-11-11',
-    visitTime: '10:20',
-  },
-  {
-    active: true,
-    amount: 15000,
-    city: '대구',
-    grade: 'VIP',
-    meeting: '2026-11-11 16:45',
-    memo: '대구시 중구 동성로 45',
-    name: '박지훈',
-    visitDate: '2026-11-11',
-    visitTime: '10:20',
-  },
-  {
-    active: true,
-    amount: 15000,
-    city: '대구',
-    grade: 'VIP',
-    meeting: '2026-11-11 16:45',
-    memo: '대구시 중구 동성로 45',
-    name: '박지훈',
-    visitDate: '2026-11-11',
-    visitTime: '10:20',
-  },  
-];
+const cities = ['서울', '부산', '대구'] as const;
+const grades = ['일반', '우수', 'VIP'] as const;
+
+const data: Contact[] = Array.from({ length: 500 }, (_, index) => {
+  const city = cities[index % cities.length];
+  const day = String((index % 28) + 1).padStart(2, '0');
+  const hour = String(index % 24).padStart(2, '0');
+  const minute = String((index * 7) % 60).padStart(2, '0');
+
+  return {
+    active: index % 2 === 0,
+    amount: (index % 11) * 1000,
+    city,
+    grade: grades[index % grades.length],
+    meeting: `2026-11-${day} ${hour}:${minute}`,
+    memo: `${city} ${index + 1}`,
+    name: `회원${index + 1}`,
+    visitDate: `2026-11-${day}`,
+    visitTime: `${hour}:${minute}`,
+  };
+});
 
 const Example = () => {
   const columns = useMemo<MRT_ColumnDef<Contact>[]>(
@@ -131,6 +73,10 @@ const Example = () => {
       enableColumnActions={false}
       enableColumnFilters={false}
       enableEditing
+      enableRowVirtualization={true}
+      rowVirtualizerOptions={{
+        overscan: 10,
+      }}
       enablePagination={false}
       enableStickyHeader
       enableTableFooter={false}

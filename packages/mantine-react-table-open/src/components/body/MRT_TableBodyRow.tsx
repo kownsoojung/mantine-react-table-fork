@@ -446,11 +446,21 @@ export const MRT_TableBodyRow = <TData extends MRT_RowData>({
       if (cell.accessorKey && accessorKey === cell.accessorKey) return true;
       return Boolean(column && item.column.id === column.id);
     }) as MRT_Cell<TData> | undefined;
-    const raw = cell.accessorKey
-      ? getRecordValue(row.original, cell.accessorKey)
-      : column
-        ? row.getValue(column.id)
-        : undefined;
+    const accessorKey =
+      cell.accessorKey ?? matchedCell?.column.id ?? column?.id;
+    const cached = accessorKey
+      ? (row as { _valuesCache?: Record<string, unknown> })._valuesCache?.[
+          accessorKey
+        ]
+      : undefined;
+    const raw =
+      cached !== undefined
+        ? cached
+        : cell.accessorKey
+          ? getRecordValue(row.original, cell.accessorKey)
+          : column
+            ? row.getValue(column.id)
+            : undefined;
     const editingEnabled =
       parseFromValuesOrFunc(enableEditing, row) &&
       (!matchedCell ||
@@ -465,8 +475,6 @@ export const MRT_TableBodyRow = <TData extends MRT_RowData>({
         editingRow?.id === row.id ||
         (matchedCell && editingCell?.id === matchedCell.id));
 
-    const accessorKey =
-      cell.accessorKey ?? matchedCell?.column.id ?? column?.id;
     const editVariant =
       cell.editVariant ??
       (matchedCell?.column.columnDef.editVariant as

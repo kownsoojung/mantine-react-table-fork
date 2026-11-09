@@ -13,6 +13,7 @@ import {
 import { MRT_TableBodyEmptyRow } from './MRT_TableBodyEmptyRow';
 import { Memo_MRT_TableBodyRow, MRT_TableBodyRow } from './MRT_TableBodyRow';
 
+import { useBandRowWindow } from '../../hooks/useBandRowWindow';
 import { useMRT_Rows } from '../../hooks/useMRT_Rows';
 import { useMRT_RowVirtualizer } from '../../hooks/useMRT_RowVirtualizer';
 import {
@@ -45,6 +46,7 @@ export const MRT_TableBody = <TData extends MRT_RowData>({
     getState,
     getTopRows,
     options: {
+      bodyFormat,
       enableStickyFooter,
       enableStickyHeader,
       layoutMode,
@@ -79,8 +81,14 @@ export const MRT_TableBody = <TData extends MRT_RowData>({
   const rows = useMRT_Rows(table);
 
   const rowVirtualizer = useMRT_RowVirtualizer(table, rows);
+  const bandWindow = useBandRowWindow(
+    table,
+    rows.length,
+    Boolean(bodyFormat),
+  );
 
   const { virtualRows } = rowVirtualizer ?? {};
+  const columnCount = table.getVisibleLeafColumns().length;
 
   const commonRowProps = {
     columnVirtualizer,
@@ -140,9 +148,18 @@ export const MRT_TableBody = <TData extends MRT_RowData>({
             <MRT_TableBodyEmptyRow {...commonRowProps} />
           ) : (
             <>
-              {(virtualRows ?? rows).map(
-                (rowOrVirtualRow, renderedRowIndex) => {
-                  if (rowVirtualizer) {
+              {bandWindow.top > 0 ? (
+                <tr aria-hidden="true" className={classes['band-spacer']}>
+                  <td colSpan={columnCount} style={{ height: bandWindow.top }} />
+                </tr>
+              ) : null}
+              {(bodyFormat
+                ? rows.slice(bandWindow.start, bandWindow.end)
+                : (virtualRows ?? rows)
+              ).map((rowOrVirtualRow, renderedRowIndex) => {
+                  if (bodyFormat) {
+                    renderedRowIndex += bandWindow.start;
+                  } else if (rowVirtualizer) {
                     if (renderDetailPanel) {
                       if (rowOrVirtualRow.index % 2 === 1) {
                         return null;
@@ -153,9 +170,10 @@ export const MRT_TableBody = <TData extends MRT_RowData>({
                       renderedRowIndex = rowOrVirtualRow.index;
                     }
                   }
-                  const row = rowVirtualizer
-                    ? rows[renderedRowIndex]
-                    : (rowOrVirtualRow as MRT_Row<TData>);
+                  const row =
+                    bodyFormat || !rowVirtualizer
+                      ? (rowOrVirtualRow as MRT_Row<TData>)
+                      : rows[renderedRowIndex];
                   const props = {
                     ...commonRowProps,
                     pinnedRowIds,
@@ -174,6 +192,14 @@ export const MRT_TableBody = <TData extends MRT_RowData>({
                   );
                 },
               )}
+              {bandWindow.bottom > 0 ? (
+                <tr aria-hidden="true" className={classes['band-spacer']}>
+                  <td
+                    colSpan={columnCount}
+                    style={{ height: bandWindow.bottom }}
+                  />
+                </tr>
+              ) : null}
             </>
           ))}
       </TableTbody>
