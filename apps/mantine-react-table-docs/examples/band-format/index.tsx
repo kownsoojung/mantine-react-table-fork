@@ -67,6 +67,7 @@ const Example = () => {
         'mrt-row-numbers': { size: 56 },
         'mrt-row-select': { size: 48 },
       }}
+      enableColumnPinning
       enableColumnResizing={true}
       enableRowSelection={true}
       enableRowNumbers={true}
@@ -80,7 +81,7 @@ const Example = () => {
         overscan: 10,
       }}
       initialState={{
-        columnPinning: { left: ['mrt-row-select','mrt-row-numbers','name', ] },
+        columnPinning: { left: ['mrt-row-select', 'mrt-row-numbers'] },
       }}
       enablePagination={false}
       enableStickyHeader

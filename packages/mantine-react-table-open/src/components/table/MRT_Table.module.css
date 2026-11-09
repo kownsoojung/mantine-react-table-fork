@@ -3,6 +3,8 @@
 }
 
 .root-band {
+  border-collapse: separate !important;
+  border-spacing: 0;
   max-width: calc(var(--mrt-band-table-width) * 1px) !important;
   min-width: calc(var(--mrt-band-table-width) * 1px) !important;
   table-layout: fixed !important;
@@ -13,6 +15,11 @@
 .root-band :global(td:focus) {
   outline: 2px solid var(--mantine-primary-color-filled);
   outline-offset: -2px;
+}
+
+.root-band :global(th[data-column-pinned]),
+.root-band :global(td[data-column-pinned]) {
+  z-index: 3;
 }
 
 .root-band :global(th[data-band-fixed]),
