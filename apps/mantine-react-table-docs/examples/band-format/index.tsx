@@ -46,7 +46,7 @@ const Example = () => {
       { accessorKey: 'visitDate', header: 'visitDate', size: 150 },
       { accessorKey: 'visitTime', header: 'visitTime', size: 130 },
       { accessorKey: 'amount', header: 'amount', size: 120 },
-      { accessorKey: 'grade', header: 'grade', grow: 1 },
+      { accessorKey: 'grade', header: 'grade', size: 660 },
     ],
     [],
   );
