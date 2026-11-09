@@ -7,6 +7,25 @@
   width: 100%;
 }
 
+.root-band :global(th[data-band-fixed]),
+.root-band :global(td[data-band-fixed]) {
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.root-band :global(td[data-band-fixed] > span) {
+  display: block;
+  width: 100%;
+}
+
+.root-band :global([data-band-fixed] .mantine-Checkbox-root) {
+  display: block;
+  width: fit-content;
+  margin-inline: auto;
+}
+
 .root-grid {
   display: grid;
 }

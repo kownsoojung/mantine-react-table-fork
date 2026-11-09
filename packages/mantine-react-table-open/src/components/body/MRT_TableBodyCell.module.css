@@ -5,6 +5,12 @@
   white-space: normal;
 }
 
+.band-cell :global(.mantine-Checkbox-root) {
+  display: block;
+  width: fit-content;
+  margin-inline: auto;
+}
+
 .root {
   --resize-thickness: 2px;
 

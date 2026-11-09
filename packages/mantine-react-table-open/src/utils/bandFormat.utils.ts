@@ -4,6 +4,9 @@ import {
   type MRT_RowData,
 } from '../types';
 
+export const bandLockedColumnSize = (columnId: string, size: number) =>
+  columnId === 'mrt-row-select' || columnId === 'mrt-row-numbers' ? size : 0;
+
 const isDisplayColumn = (column: unknown) =>
   (column as { columnDef?: { columnDefType?: string } }).columnDef
     ?.columnDefType === 'display';

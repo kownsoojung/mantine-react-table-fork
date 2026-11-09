@@ -14,6 +14,7 @@ import {
 
 import { useMRT_ColumnVirtualizer } from '../../hooks/useMRT_ColumnVirtualizer';
 import { type MRT_RowData, type MRT_TableInstance } from '../../types';
+import { bandLockedColumnSize } from '../../utils/bandFormat.utils';
 import { parseCSSVarId } from '../../utils/style.utils';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 import { Memo_MRT_TableBody, MRT_TableBody } from '../body/MRT_TableBody';
@@ -101,12 +102,23 @@ export const MRT_Table = <TData extends MRT_RowData>({
     >
       {hasBandFormat ? (
         <colgroup>
-          {table.getVisibleLeafColumns().map((column) => (
-            <col
-              key={column.id}
-              style={{ width: column.getSize() }}
-            />
-          ))}
+          {table.getVisibleLeafColumns().map((column) => {
+            const columnType = (
+              column.columnDef as { columnDefType?: string }
+            ).columnDefType;
+            const lockedSize = bandLockedColumnSize(
+              column.id,
+              column.getSize(),
+            );
+            const fixed =
+              columnType === 'display' ? lockedSize || column.getSize() : undefined;
+            return (
+              <col
+                key={column.id}
+                style={fixed == null ? undefined : { width: fixed }}
+              />
+            );
+          })}
         </colgroup>
       ) : null}
       {enableTableHead && <MRT_TableHead {...commonTableGroupProps} />}

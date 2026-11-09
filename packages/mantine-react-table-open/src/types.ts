@@ -754,10 +754,27 @@ export type MRT_CreateTableFeature<
  * One cell in a header or body band. `col` is an index into visible data columns.
  * Display columns such as row selection stay outside the band and are not counted.
  */
+export type MRT_BandEditVariant =
+  | 'checkbox'
+  | 'date'
+  | 'datetime'
+  | 'multi-select'
+  | 'number'
+  | 'radio'
+  | 'select'
+  | 'text'
+  | 'textarea'
+  | 'time';
+
 export type MRT_BandCell<TData extends MRT_RowData> = {
   accessorKey?: DeepKeys<TData> | string;
   col: number;
   colspan?: number;
+  /** dayjs format for `date` and `datetime`, for example `YYYY.MM.DD`. */
+  editFormat?: string;
+  /** Choices for `select`, `multi-select`, and `radio`. */
+  editOptions?: string[];
+  editVariant?: MRT_BandEditVariant;
   row: number;
   rowspan?: number;
   text?: string;

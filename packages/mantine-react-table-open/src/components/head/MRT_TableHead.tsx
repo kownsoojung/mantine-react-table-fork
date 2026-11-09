@@ -19,7 +19,11 @@ import {
   type MRT_RowData,
   type MRT_TableInstance,
 } from '../../types';
-import { groupBandCells, splitLeafColumns } from '../../utils/bandFormat.utils';
+import {
+  bandLockedColumnSize,
+  groupBandCells,
+  splitLeafColumns,
+} from '../../utils/bandFormat.utils';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 import { MRT_ToolbarAlertBanner } from '../toolbar/MRT_ToolbarAlertBanner';
 
@@ -72,11 +76,35 @@ export const MRT_TableHead = <TData extends MRT_RowData>({
       (item) => item.column.id === column.id,
     ) as MRT_Header<TData> | undefined;
     if (!header) return null;
+    const fixedSize = bandLockedColumnSize(column.id, column.getSize());
     return (
       <MRT_TableHeadCell
+        align={fixedSize ? 'center' : undefined}
+        data-band-fixed={fixedSize ? '' : undefined}
         header={header}
         key={column.id}
+        onMouseDown={(event) => {
+          const target = event.target as HTMLElement;
+          if (
+            target.closest(
+              'input, textarea, select, button, label, [role="checkbox"]',
+            )
+          ) {
+            return;
+          }
+          event.preventDefault();
+        }}
         rowSpan={headFormat?.rows}
+        style={
+          fixedSize
+            ? {
+                maxWidth: fixedSize,
+                minWidth: fixedSize,
+                width: fixedSize,
+              }
+            : undefined
+        }
+        tabIndex={-1}
         table={table}
       />
     );
@@ -101,7 +129,9 @@ export const MRT_TableHead = <TData extends MRT_RowData>({
         colSpan={colspan}
         key={`${cell.row}-${cell.col}`}
         onClick={canSort ? column?.getToggleSortingHandler() : undefined}
+        onMouseDown={(event) => event.preventDefault()}
         rowSpan={cell.rowspan ?? 1}
+        tabIndex={-1}
       >
         {headerText}
         {sorted === 'asc' ? ' ↑' : sorted === 'desc' ? ' ↓' : ''}

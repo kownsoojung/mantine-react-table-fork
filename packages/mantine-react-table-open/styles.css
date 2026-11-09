@@ -233,6 +233,12 @@
   white-space: normal;
 }
 
+.MRT_TableBodyCell-module_band-cell__VCXRy .mantine-Checkbox-root {
+  display: block;
+  width: fit-content;
+  margin-inline: auto;
+}
+
 .MRT_TableBodyCell-module_root__Wf-zi {
   --resize-thickness: 2px;
 
@@ -1193,6 +1199,25 @@
 .MRT_Table-module_root-band__v7De2 {
   table-layout: fixed;
   width: 100%;
+}
+
+.MRT_Table-module_root-band__v7De2 th[data-band-fixed],
+.MRT_Table-module_root-band__v7De2 td[data-band-fixed] {
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.MRT_Table-module_root-band__v7De2 td[data-band-fixed] > span {
+  display: block;
+  width: 100%;
+}
+
+.MRT_Table-module_root-band__v7De2 [data-band-fixed] .mantine-Checkbox-root {
+  display: block;
+  width: fit-content;
+  margin-inline: auto;
 }
 
 .MRT_Table-module_root-grid__2Pynz {
