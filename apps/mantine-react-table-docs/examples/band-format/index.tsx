@@ -18,7 +18,7 @@ type Contact = {
 const cities = ['서울', '부산', '대구'] as const;
 const grades = ['일반', '우수', 'VIP'] as const;
 
-const data: Contact[] = Array.from({ length: 3 }, (_, index) => {
+const data: Contact[] = Array.from({ length: 10 }, (_, index) => {
   const city = cities[index % cities.length];
   const day = String((index % 28) + 1).padStart(2, '0');
   const hour = String(index % 24).padStart(2, '0');
@@ -46,7 +46,7 @@ const Example = () => {
       { accessorKey: 'visitDate', header: 'visitDate', size: 150 },
       { accessorKey: 'visitTime', header: 'visitTime', size: 130 },
       { accessorKey: 'amount', header: 'amount', size: 120 },
-      { accessorKey: 'grade', header: 'grade', size: 220 },
+      { accessorKey: 'grade', header: 'grade', },
     ],
     [],
   );
@@ -67,11 +67,13 @@ const Example = () => {
         'mrt-row-numbers': { size: 56 },
         'mrt-row-select': { size: 48 },
       }}
+      enableColumnResizing={true}
       enableRowSelection={true}
       enableRowNumbers={true}
       editDisplayMode="table"
       enableColumnActions={false}
-      enableColumnFilters={false}
+      enableColumnFilters
+      enableSorting
       enableEditing
       enableRowVirtualization={true}
       rowVirtualizerOptions={{

@@ -674,6 +674,14 @@
   white-space: normal;
 }
 
+.MRT_TableHead-module_band-head-cell__dlxRG.MRT_TableHead-module_band-head-cell__dlxRG {
+  vertical-align: middle;
+}
+
+.MRT_TableHead-module_band-head-cell__dlxRG .mrt-table-head-cell-content {
+  height: auto;
+}
+
 .MRT_TableHead-module_band-cell-sortable__oDgHh {
   cursor: pointer;
 }
@@ -1213,8 +1221,9 @@
 }
 
 .MRT_Table-module_root-band__v7De2 {
+  min-width: 100%;
   table-layout: fixed;
-  width: 100%;
+  width: calc(var(--mrt-band-table-width) * 1px);
 }
 
 .MRT_Table-module_root-band__v7De2 th:focus,

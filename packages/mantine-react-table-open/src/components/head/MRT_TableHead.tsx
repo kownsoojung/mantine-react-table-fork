@@ -104,28 +104,37 @@ export const MRT_TableHead = <TData extends MRT_RowData>({
   const renderBandHeader = (cell: MRT_BandCell<TData>) => {
     const colspan = cell.colspan ?? 1;
     const column = colspan === 1 ? dataColumns[cell.col] : undefined;
-    const canSort = Boolean(column?.getCanSort());
-    const sorted = column?.getIsSorted();
+    const header = column
+      ? (leafHeaders.find((item) => item.column.id === column.id) as
+          | MRT_Header<TData>
+          | undefined)
+      : undefined;
     const headerText =
       cell.text ??
       (typeof column?.columnDef.header === 'string'
         ? column.columnDef.header
         : '');
+    if (column && header) {
+      return (
+        <MRT_TableHeadCell
+          className={classes['band-head-cell']}
+          header={header}
+          key={`${cell.row}-${cell.col}`}
+          label={headerText}
+          rowSpan={cell.rowspan ?? 1}
+          table={table}
+        />
+      );
+    }
     return (
       <TableTh
-        className={clsx(
-          classes['band-cell'],
-          canSort && classes['band-cell-sortable'],
-        )}
+        className={classes['band-cell']}
         colSpan={colspan}
         key={`${cell.row}-${cell.col}`}
-        onClick={canSort ? column?.getToggleSortingHandler() : undefined}
         onMouseDown={handleBandCellMouseDown}
         rowSpan={cell.rowspan ?? 1}
-        tabIndex={-1}
       >
         {headerText}
-        {sorted === 'asc' ? ' ↑' : sorted === 'desc' ? ' ↓' : ''}
       </TableTh>
     );
   };

@@ -33,6 +33,7 @@ import { MRT_ColumnActionMenu } from '../menus/MRT_ColumnActionMenu';
 interface Props<TData extends MRT_RowData> extends TableThProps {
   columnVirtualizer?: MRT_ColumnVirtualizer;
   header: MRT_Header<TData>;
+  label?: ReactNode;
   renderedHeaderIndex?: number;
   table: MRT_TableInstance<TData>;
 }
@@ -40,6 +41,7 @@ interface Props<TData extends MRT_RowData> extends TableThProps {
 export const MRT_TableHeadCell = <TData extends MRT_RowData>({
   columnVirtualizer,
   header,
+  label,
   renderedHeaderIndex = 0,
   table,
   ...rest
@@ -149,13 +151,14 @@ export const MRT_TableHeadCell = <TData extends MRT_RowData>({
   };
 
   const headerElement =
-    columnDef?.Header instanceof Function
+    label ??
+    (columnDef?.Header instanceof Function
       ? columnDef?.Header?.({
           column,
           header,
           table,
         })
-      : (columnDef?.Header ?? (columnDef.header as ReactNode));
+      : (columnDef?.Header ?? (columnDef.header as ReactNode)));
 
   return (
     <TableTh

@@ -91,6 +91,9 @@ export const MRT_Table = <TData extends MRT_RowData>({
   );
   const tableVars = {
     ...columnSizeVars,
+    '--mrt-band-table-width': hasBandFormat
+      ? `${table.getTotalSize()}`
+      : undefined,
     '--mrt-striped-row-background-color': stripedColor,
     '--mrt-striped-row-hover-background-color': stripedColor
       ? colorScheme === 'dark'
@@ -110,7 +113,7 @@ export const MRT_Table = <TData extends MRT_RowData>({
           const fixed =
             columnType === 'display'
               ? lockedSize || column.getSize()
-              : undefined;
+              : column.getSize();
           return (
             <col
               key={column.id}

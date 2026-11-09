@@ -6,6 +6,14 @@
   white-space: normal;
 }
 
+.band-head-cell.band-head-cell {
+  vertical-align: middle;
+}
+
+.band-head-cell :global(.mrt-table-head-cell-content) {
+  height: auto;
+}
+
 .band-cell-sortable {
   cursor: pointer;
 }
