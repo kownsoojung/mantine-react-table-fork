@@ -2,7 +2,7 @@ import clsx from 'clsx';
 
 import classes from './MRT_Table.module.css';
 
-import { useMemo, useRef, type UIEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type UIEvent } from 'react';
 
 import {
   darken,
@@ -34,6 +34,7 @@ export const MRT_Table = <TData extends MRT_RowData>({
     getFlatHeaders,
     getState,
     options: {
+      bandLayoutMode,
       bodyFormat,
       columns,
       enableStickyHeader,
@@ -48,6 +49,10 @@ export const MRT_Table = <TData extends MRT_RowData>({
   const { columnSizing, columnSizingInfo, columnVisibility, density, isFullScreen } =
     getState();
   const headClipRef = useRef<HTMLDivElement>(null);
+  const [bandScrollNode, setBandScrollNode] = useState<HTMLDivElement | null>(
+    null,
+  );
+  const [bandViewport, setBandViewport] = useState(0);
 
   const tableProps = {
     highlightOnHover: true,
@@ -81,6 +86,66 @@ export const MRT_Table = <TData extends MRT_RowData>({
   const { stripedColor } = tableProps;
   const hasBandFormat = Boolean(headFormat || bodyFormat);
   const fixedBandHead = hasBandFormat && (enableStickyHeader || isFullScreen);
+  const bandColumns = hasBandFormat
+    ? table.getVisibleLeafColumns().map((column) => {
+        const columnType = (
+          column.columnDef as { columnDefType?: string }
+        ).columnDefType;
+        const lockedSize = bandLockedColumnSize(column.id, column.getSize());
+        const size =
+          columnType === 'display'
+            ? lockedSize || column.getSize()
+            : column.getSize();
+        const grow = (column.columnDef as { grow?: boolean | number }).grow;
+        const grows =
+          bandLayoutMode === 'grid'
+            ? ![0, false].includes(grow as number | boolean)
+            : bandLayoutMode === 'grid-no-grow' && Boolean(+(grow || 0));
+        const weight = bandLayoutMode === 'grid' ? size : +(grow || 0);
+        return { column, grows, size, weight };
+      })
+    : [];
+  const bandWeightSum = bandColumns
+    .filter((column) => column.grows)
+    .reduce((sum, column) => sum + column.weight, 0);
+  const fillBand = bandWeightSum > 0;
+  const bandBaseWidth = bandColumns.reduce((sum, column) => sum + column.size, 0);
+  const bandExtra =
+    fillBand && bandViewport > bandBaseWidth ? bandViewport - bandBaseWidth : 0;
+  let sharedExtra = 0;
+  const growingColumns = bandColumns.filter((column) => column.grows);
+  const bandSizedColumns = bandColumns.map((column) => {
+    if (!bandExtra || !column.grows) return { ...column, width: column.size };
+    const isLast =
+      column.column.id === growingColumns[growingColumns.length - 1]?.column.id;
+    const share = isLast
+      ? bandExtra - sharedExtra
+      : Math.floor((bandExtra * column.weight) / bandWeightSum);
+    if (!isLast) sharedExtra += share;
+    return { ...column, width: column.size + share };
+  });
+  const bandTableWidth = bandSizedColumns.reduce(
+    (sum, column) => sum + column.width,
+    0,
+  );
+  const bandTableStyle = hasBandFormat
+    ? {
+        maxWidth: bandTableWidth,
+        minWidth: bandTableWidth,
+        width: bandTableWidth,
+      }
+    : undefined;
+
+  useEffect(() => {
+    if (!fillBand) return;
+    const node = bandScrollNode ?? table.refs.tableContainerRef.current;
+    if (!node) return;
+    const update = () => setBandViewport(node.clientWidth);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [bandScrollNode, fillBand, table]);
 
   const tableClassName = clsx(
     'mrt-table',
@@ -89,11 +154,22 @@ export const MRT_Table = <TData extends MRT_RowData>({
     layoutMode?.startsWith('grid') && classes['root-grid'],
     tableProps.className,
   );
+  const bandSizeVars: Record<string, number> = {};
+  if (hasBandFormat) {
+    const widthById = new Map(
+      bandSizedColumns.map((column) => [column.column.id, column.width]),
+    );
+    for (const header of getFlatHeaders()) {
+      const width = widthById.get(header.column.id);
+      if (width == null) continue;
+      bandSizeVars[`--header-${parseCSSVarId(header.id)}-size`] = width;
+      bandSizeVars[`--col-${parseCSSVarId(header.column.id)}-size`] = width;
+    }
+  }
   const tableVars = {
     ...columnSizeVars,
-    '--mrt-band-table-width': hasBandFormat
-      ? `${table.getTotalSize()}`
-      : undefined,
+    ...bandSizeVars,
+    '--mrt-band-table-width': hasBandFormat ? `${bandTableWidth}` : undefined,
     '--mrt-striped-row-background-color': stripedColor,
     '--mrt-striped-row-hover-background-color': stripedColor
       ? colorScheme === 'dark'
@@ -105,22 +181,9 @@ export const MRT_Table = <TData extends MRT_RowData>({
   const renderColGroup = () =>
     hasBandFormat ? (
       <colgroup>
-        {table.getVisibleLeafColumns().map((column) => {
-          const columnType = (
-            column.columnDef as { columnDefType?: string }
-          ).columnDefType;
-          const lockedSize = bandLockedColumnSize(column.id, column.getSize());
-          const fixed =
-            columnType === 'display'
-              ? lockedSize || column.getSize()
-              : column.getSize();
-          return (
-            <col
-              key={column.id}
-              style={fixed == null ? undefined : { width: fixed }}
-            />
-          );
-        })}
+        {bandSizedColumns.map(({ column, width }) => (
+          <col key={column.id} style={{ width }} />
+        ))}
       </colgroup>
     ) : null;
   const body = (
@@ -145,6 +208,7 @@ export const MRT_Table = <TData extends MRT_RowData>({
             {...tableProps}
             __vars={tableVars}
             className={clsx(tableClassName, classes['band-head-table'])}
+            style={{ ...tableProps.style, ...bandTableStyle }}
           >
             {renderColGroup()}
             {enableTableHead && <MRT_TableHead {...commonTableGroupProps} />}
@@ -159,12 +223,14 @@ export const MRT_Table = <TData extends MRT_RowData>({
           }}
           ref={(node: HTMLDivElement | null) => {
             if (node) table.refs.tableContainerRef.current = node;
+            setBandScrollNode(node);
           }}
         >
           <Table
             {...tableProps}
             __vars={tableVars}
             className={clsx(tableClassName, classes['band-body-table'])}
+            style={{ ...tableProps.style, ...bandTableStyle }}
           >
             {renderColGroup()}
             {body}
@@ -179,6 +245,7 @@ export const MRT_Table = <TData extends MRT_RowData>({
       {...tableProps}
       __vars={tableVars}
       className={tableClassName}
+      style={{ ...tableProps.style, ...bandTableStyle }}
     >
       {renderColGroup()}
       {enableTableHead && <MRT_TableHead {...commonTableGroupProps} />}

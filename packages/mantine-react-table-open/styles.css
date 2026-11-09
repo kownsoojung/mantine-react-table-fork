@@ -1221,9 +1221,10 @@
 }
 
 .MRT_Table-module_root-band__v7De2 {
-  min-width: 100%;
-  table-layout: fixed;
-  width: calc(var(--mrt-band-table-width) * 1px);
+  max-width: calc(var(--mrt-band-table-width) * 1px) !important;
+  min-width: calc(var(--mrt-band-table-width) * 1px) !important;
+  table-layout: fixed !important;
+  width: calc(var(--mrt-band-table-width) * 1px) !important;
 }
 
 .MRT_Table-module_root-band__v7De2 th:focus,

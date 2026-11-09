@@ -79,6 +79,10 @@ const Example = () => {
       rowVirtualizerOptions={{
         overscan: 10,
       }}
+      initialState={{
+        density: 'xs',
+        columnPinning: { left: ['name',] },
+      }}
       enablePagination={false}
       enableStickyHeader
       enableTableFooter={false}

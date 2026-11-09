@@ -929,9 +929,15 @@ export type MRT_TableOptions<TData extends MRT_RowData> = {
   icons?: Partial<MRT_Icons>;
   initialState?: Partial<MRT_TableState<TData>>;
   /**
-   * Changes which kind of CSS layout is used to render the table. `semantic` uses default semantic HTML elements, while `grid` adds CSS grid and flexbox styles
+   * Changes which kind of CSS layout is used to render the table. `semantic` uses default semantic HTML elements, while `grid` adds CSS grid and flexbox styles.
+   * A band table stays semantic so colspan works. `grid` still stretches its columns to the container, and `grid-no-grow` keeps each column at its size unless that column sets `grow`.
    */
   layoutMode?: 'grid' | 'grid-no-grow' | 'semantic';
+  /**
+   * Layout requested before a band table is drawn as semantic HTML.
+   * Derived from `layoutMode`.
+   */
+  bandLayoutMode?: 'grid' | 'grid-no-grow' | 'semantic';
   /**
    * Pass in either a locale imported from `mantine-react-table/locales/*` or a custom locale object.
    *

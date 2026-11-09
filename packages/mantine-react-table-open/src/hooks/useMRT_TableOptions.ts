@@ -161,6 +161,7 @@ export const useMRT_TableOptions: <TData extends MRT_RowData>(
 
   layoutMode =
     layoutMode || (enableColumnResizing ? 'grid-no-grow' : 'semantic');
+  const bandLayoutMode = headFormat || bodyFormat ? layoutMode : undefined;
   if (headFormat || bodyFormat) {
     layoutMode = 'semantic';
   } else if (
@@ -271,5 +272,6 @@ export const useMRT_TableOptions: <TData extends MRT_RowData>(
     selectAllMode,
     sortingFns,
     ...rest,
+    bandLayoutMode,
   } as MRT_DefinedTableOptions<TData>;
 };

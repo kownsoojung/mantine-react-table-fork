@@ -3,9 +3,10 @@
 }
 
 .root-band {
-  min-width: 100%;
-  table-layout: fixed;
-  width: calc(var(--mrt-band-table-width) * 1px);
+  max-width: calc(var(--mrt-band-table-width) * 1px) !important;
+  min-width: calc(var(--mrt-band-table-width) * 1px) !important;
+  table-layout: fixed !important;
+  width: calc(var(--mrt-band-table-width) * 1px) !important;
 }
 
 .root-band :global(th:focus),
