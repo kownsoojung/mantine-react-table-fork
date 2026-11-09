@@ -51,20 +51,11 @@ import {
   getBandValidationError,
   getRecordValue,
   groupBandCells,
+  handleBandCellMouseDown,
   splitLeafColumns,
 } from '../../utils/bandFormat.utils';
 import { getIsRowSelected } from '../../utils/row.utils';
 import { parseFromValuesOrFunc } from '../../utils/utils';
-
-const controlSelector =
-  'input, textarea, select, button, label, [role="combobox"], [role="checkbox"], [role="listbox"]';
-
-const focusCellControl = (event: ReactMouseEvent<HTMLElement>) => {
-  const target = event.target as HTMLElement;
-  if (target.closest(controlSelector)) return;
-  event.preventDefault();
-  event.currentTarget.querySelector<HTMLElement>(controlSelector)?.focus();
-};
 
 const writeBandValue = <TData extends MRT_RowData>(
   row: MRT_Row<TData>,
@@ -426,7 +417,7 @@ export const MRT_TableBodyRow = <TData extends MRT_RowData>({
         data-band-fixed={fixedSize ? '' : undefined}
         key={cell.id}
         numRows={numRows}
-        onMouseDown={focusCellControl}
+        onMouseDown={handleBandCellMouseDown}
         renderedColumnIndex={visibleCells.indexOf(cell)}
         renderedRowIndex={renderedRowIndex}
         rowRef={rowRef}
@@ -493,7 +484,7 @@ export const MRT_TableBodyRow = <TData extends MRT_RowData>({
             setEditingCell(matchedCell);
           }
         }}
-        onMouseDown={showInput ? focusCellControl : undefined}
+        onMouseDown={handleBandCellMouseDown}
         rowSpan={cell.rowspan ?? 1}
         tabIndex={-1}
       >

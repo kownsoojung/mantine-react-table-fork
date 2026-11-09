@@ -8,6 +8,27 @@ import {
 export const bandLockedColumnSize = (columnId: string, size: number) =>
   columnId === 'mrt-row-select' || columnId === 'mrt-row-numbers' ? size : 0;
 
+export const bandControlSelector =
+  'input, textarea, select, button, label, [role="combobox"], [role="checkbox"], [role="listbox"], [role="radio"], [role="spinbutton"]';
+
+export const handleBandCellMouseDown = (event: {
+  currentTarget: EventTarget | null;
+  preventDefault: () => void;
+  target: EventTarget | null;
+}) => {
+  const current = event.currentTarget;
+  if (!(current instanceof HTMLElement)) return;
+  const target = event.target;
+  if (target instanceof Element && target.closest(bandControlSelector)) return;
+  if (current.querySelector(bandControlSelector)) {
+    event.preventDefault();
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) active.blur();
+    return;
+  }
+  current.focus();
+};
+
 const isDisplayColumn = (column: unknown) =>
   (column as { columnDef?: { columnDefType?: string } }).columnDef
     ?.columnDefType === 'display';

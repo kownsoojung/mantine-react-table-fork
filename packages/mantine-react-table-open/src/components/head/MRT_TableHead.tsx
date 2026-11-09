@@ -22,6 +22,7 @@ import {
 import {
   bandLockedColumnSize,
   groupBandCells,
+  handleBandCellMouseDown,
   splitLeafColumns,
 } from '../../utils/bandFormat.utils';
 import { parseFromValuesOrFunc } from '../../utils/utils';
@@ -83,17 +84,7 @@ export const MRT_TableHead = <TData extends MRT_RowData>({
         data-band-fixed={fixedSize ? '' : undefined}
         header={header}
         key={column.id}
-        onMouseDown={(event) => {
-          const target = event.target as HTMLElement;
-          if (
-            target.closest(
-              'input, textarea, select, button, label, [role="checkbox"]',
-            )
-          ) {
-            return;
-          }
-          event.preventDefault();
-        }}
+        onMouseDown={handleBandCellMouseDown}
         rowSpan={headFormat?.rows}
         style={
           fixedSize
@@ -129,7 +120,7 @@ export const MRT_TableHead = <TData extends MRT_RowData>({
         colSpan={colspan}
         key={`${cell.row}-${cell.col}`}
         onClick={canSort ? column?.getToggleSortingHandler() : undefined}
-        onMouseDown={(event) => event.preventDefault()}
+        onMouseDown={handleBandCellMouseDown}
         rowSpan={cell.rowspan ?? 1}
         tabIndex={-1}
       >

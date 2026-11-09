@@ -7,6 +7,12 @@
   width: 100%;
 }
 
+.root-band :global(th:focus),
+.root-band :global(td:focus) {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
 .root-band :global(th[data-band-fixed]),
 .root-band :global(td[data-band-fixed]) {
   padding-left: 0;

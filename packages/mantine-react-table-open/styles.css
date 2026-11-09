@@ -1205,6 +1205,12 @@
   width: 100%;
 }
 
+.MRT_Table-module_root-band__v7De2 th:focus,
+.MRT_Table-module_root-band__v7De2 td:focus {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
 .MRT_Table-module_root-band__v7De2 th[data-band-fixed],
 .MRT_Table-module_root-band__v7De2 td[data-band-fixed] {
   padding-left: 0;
