@@ -13,6 +13,12 @@
   );
 }
 
+.root.root-band-fixed-head {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .root-fullscreen {
   max-height: calc(
     100vh - calc(var(--mrt-top-toolbar-height) * 1px)

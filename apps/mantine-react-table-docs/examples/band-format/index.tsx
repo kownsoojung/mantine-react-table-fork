@@ -18,7 +18,7 @@ type Contact = {
 const cities = ['서울', '부산', '대구'] as const;
 const grades = ['일반', '우수', 'VIP'] as const;
 
-const data: Contact[] = Array.from({ length: 500 }, (_, index) => {
+const data: Contact[] = Array.from({ length: 3 }, (_, index) => {
   const city = cities[index % cities.length];
   const day = String((index % 28) + 1).padStart(2, '0');
   const hour = String(index % 24).padStart(2, '0');

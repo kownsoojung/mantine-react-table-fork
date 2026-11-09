@@ -2,7 +2,7 @@ import clsx from 'clsx';
 
 import classes from './MRT_Table.module.css';
 
-import { useMemo } from 'react';
+import { useMemo, useRef, type UIEvent } from 'react';
 
 import {
   darken,
@@ -36,6 +36,7 @@ export const MRT_Table = <TData extends MRT_RowData>({
     options: {
       bodyFormat,
       columns,
+      enableStickyHeader,
       enableTableFooter,
       enableTableHead,
       headFormat,
@@ -44,8 +45,9 @@ export const MRT_Table = <TData extends MRT_RowData>({
       memoMode,
     },
   } = table;
-  const { columnSizing, columnSizingInfo, columnVisibility, density } =
+  const { columnSizing, columnSizingInfo, columnVisibility, density, isFullScreen } =
     getState();
+  const headClipRef = useRef<HTMLDivElement>(null);
 
   const tableProps = {
     highlightOnHover: true,
@@ -78,50 +80,48 @@ export const MRT_Table = <TData extends MRT_RowData>({
 
   const { stripedColor } = tableProps;
   const hasBandFormat = Boolean(headFormat || bodyFormat);
+  const fixedBandHead = hasBandFormat && (enableStickyHeader || isFullScreen);
 
-  return (
-    <Table
-      className={clsx(
-        'mrt-table',
-        classes.root,
-        hasBandFormat && classes['root-band'],
-        layoutMode?.startsWith('grid') && classes['root-grid'],
-        tableProps.className,
-      )}
-      {...tableProps}
-      __vars={{
-        ...columnSizeVars,
-        '--mrt-striped-row-background-color': stripedColor,
-        '--mrt-striped-row-hover-background-color': stripedColor
-          ? colorScheme === 'dark'
-            ? lighten(stripedColor, 0.08)
-            : darken(stripedColor, 0.12)
-          : undefined,
-        ...tableProps.__vars,
-      }}
-    >
-      {hasBandFormat ? (
-        <colgroup>
-          {table.getVisibleLeafColumns().map((column) => {
-            const columnType = (
-              column.columnDef as { columnDefType?: string }
-            ).columnDefType;
-            const lockedSize = bandLockedColumnSize(
-              column.id,
-              column.getSize(),
-            );
-            const fixed =
-              columnType === 'display' ? lockedSize || column.getSize() : undefined;
-            return (
-              <col
-                key={column.id}
-                style={fixed == null ? undefined : { width: fixed }}
-              />
-            );
-          })}
-        </colgroup>
-      ) : null}
-      {enableTableHead && <MRT_TableHead {...commonTableGroupProps} />}
+  const tableClassName = clsx(
+    'mrt-table',
+    classes.root,
+    hasBandFormat && classes['root-band'],
+    layoutMode?.startsWith('grid') && classes['root-grid'],
+    tableProps.className,
+  );
+  const tableVars = {
+    ...columnSizeVars,
+    '--mrt-striped-row-background-color': stripedColor,
+    '--mrt-striped-row-hover-background-color': stripedColor
+      ? colorScheme === 'dark'
+        ? lighten(stripedColor, 0.08)
+        : darken(stripedColor, 0.12)
+      : undefined,
+    ...tableProps.__vars,
+  };
+  const renderColGroup = () =>
+    hasBandFormat ? (
+      <colgroup>
+        {table.getVisibleLeafColumns().map((column) => {
+          const columnType = (
+            column.columnDef as { columnDefType?: string }
+          ).columnDefType;
+          const lockedSize = bandLockedColumnSize(column.id, column.getSize());
+          const fixed =
+            columnType === 'display'
+              ? lockedSize || column.getSize()
+              : undefined;
+          return (
+            <col
+              key={column.id}
+              style={fixed == null ? undefined : { width: fixed }}
+            />
+          );
+        })}
+      </colgroup>
+    ) : null;
+  const body = (
+    <>
       {memoMode === 'table-body' || columnSizingInfo.isResizingColumn ? (
         <Memo_MRT_TableBody
           {...commonTableGroupProps}
@@ -131,6 +131,55 @@ export const MRT_Table = <TData extends MRT_RowData>({
         <MRT_TableBody {...commonTableGroupProps} tableProps={tableProps} />
       )}
       {enableTableFooter && <MRT_TableFooter {...commonTableGroupProps} />}
+    </>
+  );
+
+  if (fixedBandHead) {
+    return (
+      <>
+        <div className={classes['band-head-clip']} ref={headClipRef}>
+          <Table
+            {...tableProps}
+            __vars={tableVars}
+            className={clsx(tableClassName, classes['band-head-table'])}
+          >
+            {renderColGroup()}
+            {enableTableHead && <MRT_TableHead {...commonTableGroupProps} />}
+          </Table>
+        </div>
+        <div
+          className={classes['band-body-scroll']}
+          onScroll={(event: UIEvent<HTMLDivElement>) => {
+            if (headClipRef.current) {
+              headClipRef.current.scrollLeft = event.currentTarget.scrollLeft;
+            }
+          }}
+          ref={(node: HTMLDivElement | null) => {
+            if (node) table.refs.tableContainerRef.current = node;
+          }}
+        >
+          <Table
+            {...tableProps}
+            __vars={tableVars}
+            className={clsx(tableClassName, classes['band-body-table'])}
+          >
+            {renderColGroup()}
+            {body}
+          </Table>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <Table
+      {...tableProps}
+      __vars={tableVars}
+      className={tableClassName}
+    >
+      {renderColGroup()}
+      {enableTableHead && <MRT_TableHead {...commonTableGroupProps} />}
+      {body}
     </Table>
   );
 };

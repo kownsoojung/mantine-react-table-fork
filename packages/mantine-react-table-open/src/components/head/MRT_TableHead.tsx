@@ -138,12 +138,11 @@ export const MRT_TableHead = <TData extends MRT_RowData>({
         layoutMode?.startsWith('grid')
           ? classes['root-grid']
           : classes['root-table-row-group'],
-        stickyHeader && classes['root-sticky'],
-        stickyHeader && headFormat && classes['root-band-sticky'],
+        stickyHeader && !headFormat && classes['root-sticky'],
         tableHeadProps?.className,
       )}
       pos={
-        stickyHeader && (layoutMode?.startsWith('grid') || headFormat)
+        stickyHeader && layoutMode?.startsWith('grid') && !headFormat
           ? 'sticky'
           : 'relative'
       }

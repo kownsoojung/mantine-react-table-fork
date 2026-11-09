@@ -29,7 +29,9 @@ export const MRT_TableContainer = <TData extends MRT_RowData>({
     options: {
       createDisplayMode,
       editDisplayMode,
+      bodyFormat,
       enableStickyHeader,
+      headFormat,
       mantineLoadingOverlayProps,
       mantineTableContainerProps,
     },
@@ -70,6 +72,8 @@ export const MRT_TableContainer = <TData extends MRT_RowData>({
 
   const createModalOpen = createDisplayMode === 'modal' && creatingRow;
   const editModalOpen = editDisplayMode === 'modal' && editingRow;
+  const fixedBandHead =
+    Boolean(headFormat || bodyFormat) && (enableStickyHeader || isFullScreen);
 
   return (
     <Box
@@ -82,12 +86,13 @@ export const MRT_TableContainer = <TData extends MRT_RowData>({
         'mrt-table-container',
         classes.root,
         enableStickyHeader && classes['root-sticky'],
+        fixedBandHead && classes['root-band-fixed-head'],
         isFullScreen && classes['root-fullscreen'],
         tableContainerProps?.className,
       )}
       ref={(node: HTMLDivElement) => {
         if (node) {
-          tableContainerRef.current = node;
+          if (!fixedBandHead) tableContainerRef.current = node;
           if (tableContainerProps?.ref) {
             //@ts-ignore
             tableContainerProps.ref.current = node;
