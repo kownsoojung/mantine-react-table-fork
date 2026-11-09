@@ -85,6 +85,7 @@ const Example = () => {
       initialState={{
         columnPinning: { left: ['mrt-row-select', 'mrt-row-numbers'] },
       }}
+      
       enablePagination={false}
       enableStickyHeader
       enableTableFooter={false}

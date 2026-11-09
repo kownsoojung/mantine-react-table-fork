@@ -35,9 +35,15 @@
   outline-offset: -2px;
 }
 
-.root-band :global(th[data-column-pinned]),
-.root-band :global(td[data-column-pinned]) {
-  z-index: 3;
+.root-band :global(th[data-column-pinned='left']),
+.root-band :global(td[data-column-pinned='left']) {
+  background-color: var(
+    --mrt-pinned-column-background-color,
+    var(--mrt-base-background-color)
+  );
+  left: calc(var(--mrt-table-cell-left, 0) * 1px) !important;
+  position: sticky !important;
+  z-index: 4;
 }
 
 .root-band :global(th[data-band-fixed]),
@@ -62,7 +68,13 @@
 .band-head-clip {
   box-sizing: border-box;
   flex: none;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.band-head-clip::-webkit-scrollbar {
+  display: none;
 }
 
 .band-head-clip :global(table) {
