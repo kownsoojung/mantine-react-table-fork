@@ -92,7 +92,9 @@ export const useMRT_TableOptions: <TData extends MRT_RowData>(
   enableTableHead = true,
   enableToolbarInternalActions = true,
   enableTopToolbar = true,
+  bodyFormat,
   filterFns,
+  headFormat,
   icons,
   layoutMode,
   localization,
@@ -142,6 +144,11 @@ export const useMRT_TableOptions: <TData extends MRT_RowData>(
     }),
     [defaultDisplayColumn],
   );
+  if (headFormat || bodyFormat) {
+    enableColumnVirtualization = false;
+    enableRowVirtualization = false;
+  }
+
   //cannot be changed after initialization
   [enableColumnVirtualization, enableRowVirtualization] = useMemo(
     () => [enableColumnVirtualization, enableRowVirtualization],
@@ -154,7 +161,9 @@ export const useMRT_TableOptions: <TData extends MRT_RowData>(
 
   layoutMode =
     layoutMode || (enableColumnResizing ? 'grid-no-grow' : 'semantic');
-  if (
+  if (headFormat || bodyFormat) {
+    layoutMode = 'semantic';
+  } else if (
     layoutMode === 'semantic' &&
     (enableRowVirtualization || enableColumnVirtualization)
   ) {
@@ -219,6 +228,7 @@ export const useMRT_TableOptions: <TData extends MRT_RowData>(
     enableTableHead,
     enableToolbarInternalActions,
     enableTopToolbar,
+    bodyFormat,
     filterFns,
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel:
@@ -240,6 +250,7 @@ export const useMRT_TableOptions: <TData extends MRT_RowData>(
       : undefined,
     getSortedRowModel: enableSorting ? getSortedRowModel() : undefined,
     getSubRows: (row) => row?.subRows,
+    headFormat,
     icons,
     layoutMode,
     localization,

@@ -9,13 +9,17 @@ import {
   TableTr,
 } from '@mantine/core';
 
+import { MRT_TableHeadCell } from './MRT_TableHeadCell';
 import { MRT_TableHeadRow } from './MRT_TableHeadRow';
 
 import {
+  type MRT_BandCell,
   type MRT_ColumnVirtualizer,
+  type MRT_Header,
   type MRT_RowData,
   type MRT_TableInstance,
 } from '../../types';
+import { groupBandCells, splitLeafColumns } from '../../utils/bandFormat.utils';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 import { MRT_ToolbarAlertBanner } from '../toolbar/MRT_ToolbarAlertBanner';
 
@@ -36,6 +40,7 @@ export const MRT_TableHead = <TData extends MRT_RowData>({
     getState,
     options: {
       enableStickyHeader,
+      headFormat,
       layoutMode,
       mantineTableHeadProps,
       positionToolbarAlertBanner,
@@ -52,6 +57,57 @@ export const MRT_TableHead = <TData extends MRT_RowData>({
   };
 
   const stickyHeader = enableStickyHeader || isFullScreen;
+  const showAlertOverlay =
+    positionToolbarAlertBanner === 'head-overlay' &&
+    (showAlertBanner || getSelectedRowModel().rows.length > 0);
+
+  const leafColumns = table.getVisibleLeafColumns();
+  const { dataColumns, leading, trailing } = splitLeafColumns(leafColumns);
+  const leafHeaders =
+    table.getHeaderGroups()[table.getHeaderGroups().length - 1]?.headers ?? [];
+  const bandRows = headFormat ? groupBandCells(headFormat) : [];
+
+  const renderDisplayHeader = (column: (typeof leading)[number]) => {
+    const header = leafHeaders.find(
+      (item) => item.column.id === column.id,
+    ) as MRT_Header<TData> | undefined;
+    if (!header) return null;
+    return (
+      <MRT_TableHeadCell
+        header={header}
+        key={column.id}
+        rowSpan={headFormat?.rows}
+        table={table}
+      />
+    );
+  };
+
+  const renderBandHeader = (cell: MRT_BandCell<TData>) => {
+    const colspan = cell.colspan ?? 1;
+    const column = colspan === 1 ? dataColumns[cell.col] : undefined;
+    const canSort = Boolean(column?.getCanSort());
+    const sorted = column?.getIsSorted();
+    const headerText =
+      cell.text ??
+      (typeof column?.columnDef.header === 'string'
+        ? column.columnDef.header
+        : '');
+    return (
+      <TableTh
+        className={clsx(
+          classes['band-cell'],
+          canSort && classes['band-cell-sortable'],
+        )}
+        colSpan={colspan}
+        key={`${cell.row}-${cell.col}`}
+        onClick={canSort ? column?.getToggleSortingHandler() : undefined}
+        rowSpan={cell.rowspan ?? 1}
+      >
+        {headerText}
+        {sorted === 'asc' ? ' ↑' : sorted === 'desc' ? ' ↓' : ''}
+      </TableTh>
+    );
+  };
 
   return (
     <TableThead
@@ -75,8 +131,7 @@ export const MRT_TableHead = <TData extends MRT_RowData>({
         }
       }}
     >
-      {positionToolbarAlertBanner === 'head-overlay' &&
-      (showAlertBanner || getSelectedRowModel().rows.length > 0) ? (
+      {showAlertOverlay ? (
         <TableTr
           className={clsx(
             classes['banner-tr'],
@@ -93,6 +148,18 @@ export const MRT_TableHead = <TData extends MRT_RowData>({
             <MRT_ToolbarAlertBanner table={table} />
           </TableTh>
         </TableTr>
+      ) : headFormat ? (
+        bandRows.map((cells, bandRowIndex) => (
+          <TableTr key={`head-band-${bandRowIndex}`}>
+            {bandRowIndex === 0
+              ? leading.map((column) => renderDisplayHeader(column))
+              : null}
+            {cells.map((cell) => renderBandHeader(cell))}
+            {bandRowIndex === 0
+              ? trailing.map((column) => renderDisplayHeader(column))
+              : null}
+          </TableTr>
+        ))
       ) : (
         getHeaderGroups().map((headerGroup) => (
           <MRT_TableHeadRow

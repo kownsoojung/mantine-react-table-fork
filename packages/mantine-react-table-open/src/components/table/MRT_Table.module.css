@@ -2,6 +2,11 @@
   background-color: var(--mrt-base-background-color);
 }
 
+.root-band {
+  table-layout: fixed;
+  width: 100%;
+}
+
 .root-grid {
   display: grid;
 }

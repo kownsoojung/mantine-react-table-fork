@@ -1,3 +1,10 @@
+.band-cell {
+  overflow: visible;
+  text-overflow: unset;
+  vertical-align: middle;
+  white-space: normal;
+}
+
 .root {
   --resize-thickness: 2px;
 

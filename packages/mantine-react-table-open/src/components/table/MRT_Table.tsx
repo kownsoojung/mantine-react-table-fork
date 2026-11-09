@@ -33,9 +33,11 @@ export const MRT_Table = <TData extends MRT_RowData>({
     getFlatHeaders,
     getState,
     options: {
+      bodyFormat,
       columns,
       enableTableFooter,
       enableTableHead,
+      headFormat,
       layoutMode,
       mantineTableProps,
       memoMode,
@@ -74,12 +76,14 @@ export const MRT_Table = <TData extends MRT_RowData>({
   const { colorScheme } = useMantineColorScheme();
 
   const { stripedColor } = tableProps;
+  const hasBandFormat = Boolean(headFormat || bodyFormat);
 
   return (
     <Table
       className={clsx(
         'mrt-table',
         classes.root,
+        hasBandFormat && classes['root-band'],
         layoutMode?.startsWith('grid') && classes['root-grid'],
         tableProps.className,
       )}
@@ -95,6 +99,16 @@ export const MRT_Table = <TData extends MRT_RowData>({
         ...tableProps.__vars,
       }}
     >
+      {hasBandFormat ? (
+        <colgroup>
+          {table.getVisibleLeafColumns().map((column) => (
+            <col
+              key={column.id}
+              style={{ width: column.getSize() }}
+            />
+          ))}
+        </colgroup>
+      ) : null}
       {enableTableHead && <MRT_TableHead {...commonTableGroupProps} />}
       {memoMode === 'table-body' || columnSizingInfo.isResizingColumn ? (
         <Memo_MRT_TableBody

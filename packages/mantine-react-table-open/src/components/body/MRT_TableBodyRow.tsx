@@ -7,14 +7,18 @@ import { type DragEvent, memo, useMemo, useRef } from 'react';
 import {
   Box,
   type TableProps,
+  TableTd,
   TableTr,
   type TableTrProps,
 } from '@mantine/core';
+
+import cellClasses from './MRT_TableBodyCell.module.css';
 
 import { Memo_MRT_TableBodyCell, MRT_TableBodyCell } from './MRT_TableBodyCell';
 import { MRT_TableDetailPanel } from './MRT_TableDetailPanel';
 
 import {
+  type MRT_BandCell,
   type MRT_Cell,
   type MRT_ColumnVirtualizer,
   type MRT_DensityState,
@@ -24,6 +28,11 @@ import {
   type MRT_TableInstance,
   type MRT_VirtualItem,
 } from '../../types';
+import {
+  getRecordValue,
+  groupBandCells,
+  splitLeafColumns,
+} from '../../utils/bandFormat.utils';
 import { getIsRowSelected } from '../../utils/row.utils';
 import { parseFromValuesOrFunc } from '../../utils/utils';
 
@@ -60,6 +69,7 @@ export const MRT_TableBodyRow = <TData extends MRT_RowData>({
       enableRowPinning,
       enableStickyFooter,
       enableStickyHeader,
+      bodyFormat,
       layoutMode,
       mantineTableBodyRowProps,
       memoMode,
@@ -142,6 +152,54 @@ export const MRT_TableBodyRow = <TData extends MRT_RowData>({
   };
 
   const rowRef = useRef<HTMLTableRowElement | null>(null);
+  const useBand = Boolean(bodyFormat) && !children;
+  const bandRows =
+    useBand && bodyFormat ? groupBandCells(bodyFormat) : [undefined];
+  const { dataColumns, leading, trailing } = useBand
+    ? splitLeafColumns(table.getVisibleLeafColumns())
+    : {
+        dataColumns: [],
+        leading: [],
+        trailing: [],
+      };
+
+  const renderDisplayBodyCell = (
+    column: (typeof leading)[number],
+  ) => {
+    const cell = visibleCells.find((item) => item.column.id === column.id);
+    if (!cell) return null;
+    return (
+      <MRT_TableBodyCell
+        cell={cell}
+        key={cell.id}
+        numRows={numRows}
+        renderedColumnIndex={visibleCells.indexOf(cell)}
+        renderedRowIndex={renderedRowIndex}
+        rowRef={rowRef}
+        rowSpan={bodyFormat?.rows}
+        table={table}
+      />
+    );
+  };
+
+  const renderBandBodyCell = (cell: MRT_BandCell<TData>) => {
+    const column = dataColumns[cell.col];
+    const raw = cell.accessorKey
+      ? getRecordValue(row.original, cell.accessorKey)
+      : column
+        ? row.getValue(column.id)
+        : undefined;
+    return (
+      <TableTd
+        className={clsx(cellClasses.root, cellClasses['band-cell'])}
+        colSpan={cell.colspan ?? 1}
+        key={`${cell.row}-${cell.col}`}
+        rowSpan={cell.rowspan ?? 1}
+      >
+        {raw == null ? '' : String(raw)}
+      </TableTd>
+    );
+  };
 
   let striped = tableProps.striped as boolean | string;
 
@@ -159,89 +217,112 @@ export const MRT_TableBodyRow = <TData extends MRT_RowData>({
 
   return (
     <>
-      <TableTr
-        data-dragging-row={isDraggingRow || undefined}
-        data-hovered-row-target={isHoveredRow || undefined}
-        data-index={renderDetailPanel ? renderedRowIndex * 2 : renderedRowIndex}
-        data-row-pinned={isRowStickyPinned || isRowPinned || undefined}
-        data-selected={isRowSelected || undefined}
-        data-striped={striped}
-        onDragEnter={handleDragEnter}
-        ref={(node: HTMLTableRowElement) => {
-          if (node) {
-            rowRef.current = node;
-            rowVirtualizer?.measureElement(node);
+      {bandRows.map((bandCells, bandRowIndex) => (
+        <TableTr
+          data-band-row={useBand ? bandRowIndex : undefined}
+          data-dragging-row={isDraggingRow || undefined}
+          data-hovered-row-target={isHoveredRow || undefined}
+          data-index={
+            renderDetailPanel ? renderedRowIndex * 2 : renderedRowIndex
           }
-        }}
-        {...tableRowProps}
-        __vars={{
-          ...tableRowProps?.__vars,
-          '--mrt-pinned-row-bottom':
-            !virtualRow && bottomPinnedIndex !== undefined && isRowPinned
-              ? `${
-                  bottomPinnedIndex * rowHeight +
-                  (enableStickyFooter ? tableFooterHeight - 1 : 0)
-                }`
+          data-row-pinned={isRowStickyPinned || isRowPinned || undefined}
+          data-selected={isRowSelected || undefined}
+          data-striped={striped}
+          key={`${row.id}-${bandRowIndex}`}
+          onDragEnter={handleDragEnter}
+          ref={(node: HTMLTableRowElement) => {
+            if (node && bandRowIndex === 0) {
+              rowRef.current = node;
+              rowVirtualizer?.measureElement(node);
+            }
+          }}
+          {...tableRowProps}
+          __vars={{
+            ...tableRowProps?.__vars,
+            '--mrt-pinned-row-bottom':
+              !virtualRow && bottomPinnedIndex !== undefined && isRowPinned
+                ? `${
+                    bottomPinnedIndex * rowHeight +
+                    (enableStickyFooter ? tableFooterHeight - 1 : 0)
+                  }`
+                : undefined,
+            '--mrt-pinned-row-top': virtualRow
+              ? undefined
+              : topPinnedIndex !== undefined && isRowPinned
+                ? `${
+                    topPinnedIndex * rowHeight +
+                    (enableStickyHeader || isFullScreen
+                      ? tableHeadHeight - 1
+                      : 0)
+                  }`
+                : undefined,
+            '--mrt-virtual-row-start': virtualRow
+              ? `${virtualRow.start}`
               : undefined,
-          '--mrt-pinned-row-top': virtualRow
-            ? undefined
-            : topPinnedIndex !== undefined && isRowPinned
-              ? `${
-                  topPinnedIndex * rowHeight +
-                  (enableStickyHeader || isFullScreen ? tableHeadHeight - 1 : 0)
-                }`
-              : undefined,
-          '--mrt-virtual-row-start': virtualRow
-            ? `${virtualRow.start}`
-            : undefined,
-        }}
-        className={clsx(
-          classes.root,
-          layoutMode?.startsWith('grid') && classes['root-grid'],
-          virtualRow && classes['root-virtualized'],
-          tableRowProps?.className,
-        )}
-      >
-        {virtualPaddingLeft ? (
-          <Box component="td" display="flex" w={virtualPaddingLeft} />
-        ) : null}
-        {children
-          ? children
-          : (virtualColumns ?? row.getVisibleCells()).map(
-              (cellOrVirtualCell, renderedColumnIndex) => {
-                let cell = cellOrVirtualCell as MRT_Cell<TData>;
-                if (columnVirtualizer) {
-                  renderedColumnIndex = (cellOrVirtualCell as MRT_VirtualItem)
-                    .index;
-                  cell = visibleCells[renderedColumnIndex];
-                }
-                const cellProps = {
-                  cell,
-                  numRows,
-                  renderedColumnIndex,
-                  renderedRowIndex,
-                  rowRef,
-                  table,
-                  virtualCell: columnVirtualizer
-                    ? (cellOrVirtualCell as MRT_VirtualItem)
-                    : undefined,
-                };
-                return memoMode === 'cells' &&
-                  cell.column.columnDef.columnDefType === 'data' &&
-                  !draggingColumn &&
-                  !draggingRow &&
-                  editingCell?.id !== cell.id &&
-                  editingRow?.id !== row.id ? (
-                  <Memo_MRT_TableBodyCell key={cell.id} {...cellProps} />
-                ) : (
-                  <MRT_TableBodyCell key={cell.id} {...cellProps} />
-                );
-              },
-            )}
-        {virtualPaddingRight ? (
-          <Box component="td" display="flex" w={virtualPaddingRight} />
-        ) : null}
-      </TableTr>
+          }}
+          className={clsx(
+            classes.root,
+            layoutMode?.startsWith('grid') && classes['root-grid'],
+            virtualRow && classes['root-virtualized'],
+            tableRowProps?.className,
+          )}
+        >
+          {bandCells ? (
+            <>
+              {bandRowIndex === 0
+                ? leading.map((column) => renderDisplayBodyCell(column))
+                : null}
+              {bandCells.map((cell) => renderBandBodyCell(cell))}
+              {bandRowIndex === 0
+                ? trailing.map((column) => renderDisplayBodyCell(column))
+                : null}
+            </>
+          ) : (
+            <>
+              {virtualPaddingLeft ? (
+                <Box component="td" display="flex" w={virtualPaddingLeft} />
+              ) : null}
+              {children
+                ? children
+                : (virtualColumns ?? row.getVisibleCells()).map(
+                    (cellOrVirtualCell, renderedColumnIndex) => {
+                      let cell = cellOrVirtualCell as MRT_Cell<TData>;
+                      if (columnVirtualizer) {
+                        renderedColumnIndex = (
+                          cellOrVirtualCell as MRT_VirtualItem
+                        ).index;
+                        cell = visibleCells[renderedColumnIndex];
+                      }
+                      const cellProps = {
+                        cell,
+                        numRows,
+                        renderedColumnIndex,
+                        renderedRowIndex,
+                        rowRef,
+                        table,
+                        virtualCell: columnVirtualizer
+                          ? (cellOrVirtualCell as MRT_VirtualItem)
+                          : undefined,
+                      };
+                      return memoMode === 'cells' &&
+                        cell.column.columnDef.columnDefType === 'data' &&
+                        !draggingColumn &&
+                        !draggingRow &&
+                        editingCell?.id !== cell.id &&
+                        editingRow?.id !== row.id ? (
+                        <Memo_MRT_TableBodyCell key={cell.id} {...cellProps} />
+                      ) : (
+                        <MRT_TableBodyCell key={cell.id} {...cellProps} />
+                      );
+                    },
+                  )}
+              {virtualPaddingRight ? (
+                <Box component="td" display="flex" w={virtualPaddingRight} />
+              ) : null}
+            </>
+          )}
+        </TableTr>
+      ))}
       {renderDetailPanel && !row.getIsGrouped() && (
         <MRT_TableDetailPanel
           parentRowRef={rowRef}

@@ -111,6 +111,10 @@ export const routes: Array<RouteItem> = [
         label: 'Minimal Example',
       },
       {
+        href: '/docs/examples/band-format',
+        label: 'Band Format Example',
+      },
+      {
         href: '/docs/examples/advanced',
         label: 'Advanced Example',
       },

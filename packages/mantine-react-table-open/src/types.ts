@@ -751,6 +751,28 @@ export type MRT_CreateTableFeature<
 > = (table: MRT_TableInstance<TData>) => TFeature;
 
 /**
+ * One cell in a header or body band. `col` is an index into visible data columns.
+ * Display columns such as row selection stay outside the band and are not counted.
+ */
+export type MRT_BandCell<TData extends MRT_RowData> = {
+  accessorKey?: DeepKeys<TData> | string;
+  col: number;
+  colspan?: number;
+  row: number;
+  rowspan?: number;
+  text?: string;
+};
+
+/**
+ * Separate placement for the header band or the body band.
+ * One data record renders `rows` body lines.
+ */
+export type MRT_BandFormat<TData extends MRT_RowData> = {
+  cells: MRT_BandCell<TData>[];
+  rows: number;
+};
+
+/**
  * `columns` and `data` props are the only required props, but there are over 150 other optional props.
  *
  * See more info on creating columns and data on the official docs site:
@@ -843,6 +865,16 @@ export type MRT_TableOptions<TData extends MRT_RowData> = {
   ) => string | undefined;
   globalFilterFn?: MRT_FilterOption;
   globalFilterModeOptions?: MRT_FilterOption[] | null;
+  /**
+   * Header band placement, independent of the body band.
+   * `columns` still define width, sorting, and filtering.
+   */
+  headFormat?: MRT_BandFormat<TData>;
+  /**
+   * Body band placement, independent of the header band.
+   * A single data record is drawn across `rows` lines.
+   */
+  bodyFormat?: MRT_BandFormat<TData>;
   icons?: Partial<MRT_Icons>;
   initialState?: Partial<MRT_TableState<TData>>;
   /**
