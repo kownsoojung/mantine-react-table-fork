@@ -52,6 +52,7 @@ export const MRT_Table = <TData extends MRT_RowData>({
   const [bandScrollNode, setBandScrollNode] = useState<HTMLDivElement | null>(
     null,
   );
+  const [bandScrollbar, setBandScrollbar] = useState(0);
   const [bandViewport, setBandViewport] = useState(0);
 
   const tableProps = {
@@ -137,13 +138,22 @@ export const MRT_Table = <TData extends MRT_RowData>({
     : undefined;
 
   useEffect(() => {
-    if (!fillBand) return;
     const node = bandScrollNode ?? table.refs.tableContainerRef.current;
     if (!node) return;
-    const update = () => setBandViewport(node.clientWidth);
+    const update = () => {
+      const computed = getComputedStyle(node);
+      const border =
+        Number.parseFloat(computed.borderLeftWidth) +
+        Number.parseFloat(computed.borderRightWidth);
+      const scrollbar = Math.max(0, node.offsetWidth - node.clientWidth - border);
+      setBandScrollbar((current) => (current === scrollbar ? current : scrollbar));
+      if (fillBand) setBandViewport(node.clientWidth);
+    };
     update();
     const observer = new ResizeObserver(update);
     observer.observe(node);
+    const content = node.firstElementChild;
+    if (content) observer.observe(content);
     return () => observer.disconnect();
   }, [bandScrollNode, fillBand, table]);
 
@@ -203,7 +213,11 @@ export const MRT_Table = <TData extends MRT_RowData>({
   if (fixedBandHead) {
     return (
       <>
-        <div className={classes['band-head-clip']} ref={headClipRef}>
+        <div
+          className={classes['band-head-clip']}
+          ref={headClipRef}
+          style={{ paddingRight: bandScrollbar }}
+        >
           <Table
             {...tableProps}
             __vars={tableVars}

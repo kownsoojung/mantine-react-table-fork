@@ -35,9 +35,9 @@
 }
 
 .band-head-clip {
+  box-sizing: border-box;
   flex: none;
   overflow: hidden;
-  scrollbar-gutter: stable;
 }
 
 .band-head-clip :global(table) {

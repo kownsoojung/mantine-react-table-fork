@@ -1253,9 +1253,9 @@
 }
 
 .MRT_Table-module_band-head-clip__aAE-u {
+  box-sizing: border-box;
   flex: none;
   overflow: hidden;
-  scrollbar-gutter: stable;
 }
 
 .MRT_Table-module_band-head-clip__aAE-u table {

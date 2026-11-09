@@ -46,7 +46,7 @@ const Example = () => {
       { accessorKey: 'visitDate', header: 'visitDate', size: 150 },
       { accessorKey: 'visitTime', header: 'visitTime', size: 130 },
       { accessorKey: 'amount', header: 'amount', size: 120 },
-      { accessorKey: 'grade', header: 'grade', },
+      { accessorKey: 'grade', header: 'grade', grow: 1 },
     ],
     [],
   );
@@ -80,8 +80,7 @@ const Example = () => {
         overscan: 10,
       }}
       initialState={{
-        density: 'xs',
-        columnPinning: { left: ['name',] },
+        columnPinning: { left: ['mrt-row-select','mrt-row-numbers','name', ] },
       }}
       enablePagination={false}
       enableStickyHeader
